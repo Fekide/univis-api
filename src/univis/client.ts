@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { XMLParser } from 'fast-xml-parser'
 import { Person, UnivISResult } from '../types'
+import { resolveReferences } from './utils'
 
 export type UnivISDomain =
   | 'univis.uni-bamberg.de'
@@ -47,34 +48,18 @@ export class UnivISClient {
 
     const events =
       result.UnivIS.Event?.map((event) => {
-        const roomKey = event.rooms?.room.UnivISRef._key
-        const room =
-          roomKey !== undefined
-            ? result.UnivIS.Room?.find((r) => r._key === roomKey)
-            : undefined
-        let roomContacts: Person[] = []
-        if (room) {
-          const roomContactObject = room.contacts?.contact
-          const roomContactsKeys = Array.isArray(roomContactObject)
-            ? roomContactObject.map((c) => c.UnivISRef._key)
-            : roomContactObject !== undefined
-            ? [roomContactObject.UnivISRef._key]
-            : undefined
-          roomContacts =
-            roomContactsKeys !== undefined && result.UnivIS.Person !== undefined
-              ? result.UnivIS.Person?.filter((p) =>
-                  roomContactsKeys?.includes(p._key)
-                )
-              : []
-        }
-        const contact = event.contact.UnivISRef._key
+        const room = resolveReferences(event.rooms?.room, result.UnivIS.Room)
+        const roomContacts: Person[] = room.flatMap((r) =>
+          resolveReferences(r.contacts?.contact, result.UnivIS.Person)
+        )
+        const contact = resolveReferences(event.contact, result.UnivIS.Person)
         return {
           ...event,
           rooms: {
             ...room,
             contacts: roomContacts,
           },
-          contact: result.UnivIS.Person?.find((p) => p._key === contact),
+          contact,
         }
       }) || []
 

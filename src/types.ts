@@ -10,7 +10,12 @@ export interface UnivIS {
   _semester: string
 }
 
-export interface Event {
+export interface UnivisEntity {
+  _key: string
+  id?: string
+}
+
+export interface Event extends UnivisEntity {
   calendar: string
   contact: ContactElement
   description?: string
@@ -28,7 +33,6 @@ export interface Event {
   title: string
   url?: string
   presenter?: string
-  _key: string
 }
 
 export interface ContactElement {
@@ -53,9 +57,8 @@ export interface Rooms {
   room: ContactElement
 }
 
-export interface Person {
+export interface Person extends UnivisEntity {
   firstname?: string
-  id?: string
   lastname: string
   lehr?: string
   locations?: Locations
@@ -63,7 +66,6 @@ export interface Person {
   orgunits?: Orgunits
   pub_visible?: string
   visible?: string
-  _key: string
   fis_link_show?: string
   gender?: string
   title?: string
@@ -86,13 +88,12 @@ export interface Location {
   fax?: string
 }
 
-export interface Room {
+export interface Room extends UnivisEntity {
   id: string
   name: string
   orgname: string
   orgunits: Orgunits
   short: string
-  _key: string
   address?: string
   beam?: string
   buildingkey?: string
