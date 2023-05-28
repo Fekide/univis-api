@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { XMLParser } from 'fast-xml-parser'
 import { Person, UnivISResult } from '../types'
-import { resolveReferences } from './utils'
+import { parseOptions, resolveReferences } from './utils'
 
 export type UnivISDomain =
   | 'univis.uni-bamberg.de'
@@ -12,6 +12,17 @@ export type UnivISDomain =
 
 export interface UnivISClientOptions {
   domain: UnivISDomain
+}
+
+export interface RoomOptions {
+  department?: string
+  name?: string
+  longname?: string
+  contact?: string
+  fullname?: string
+  size?: string
+  path?: string
+  id?: string
 }
 
 export class UnivISClient {
@@ -48,21 +59,43 @@ export class UnivISClient {
 
     const events =
       result.UnivIS.Event?.map((event) => {
-        const room = resolveReferences(event.rooms?.room, result.UnivIS.Room)
-        const roomContacts: Person[] = room.flatMap((r) =>
-          resolveReferences(r.contacts?.contact, result.UnivIS.Person)
-        )
+        const rooms = resolveReferences(
+          event.rooms?.room,
+          result.UnivIS.Room
+        ).map((r) => {
+          const roomContacts: Person[] = resolveReferences(
+            r.contacts?.contact,
+            result.UnivIS.Person
+          )
+          return {
+            ...r,
+            contacts: roomContacts,
+          }
+        })
         const contact = resolveReferences(event.contact, result.UnivIS.Person)
         return {
           ...event,
-          rooms: {
-            ...room,
-            contacts: roomContacts,
-          },
+          rooms,
           contact,
         }
       }) || []
 
     return events
+  }
+
+  async getRooms(options: RoomOptions) {
+    const result = await this.request('rooms', parseOptions({ ...options }))
+
+    const rooms = result.UnivIS.Room?.map((room) => {
+      const roomContacts: Person[] = resolveReferences(
+        room.contacts?.contact,
+        result.UnivIS.Person
+      )
+      return {
+        ...room,
+        contacts: roomContacts,
+      }
+    })
+    return rooms
   }
 }
