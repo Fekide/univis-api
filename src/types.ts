@@ -19,7 +19,7 @@ export interface Event extends UnivisEntity {
   calendar: string
   contact: ContactElement
   description?: string
-  enddate: Date
+  enddate: string
   endtime: string
   id: string
   internal: string
@@ -28,7 +28,7 @@ export interface Event extends UnivisEntity {
   orgunits: Orgunits
   repeat?: string
   rooms?: Rooms
-  startdate: Date
+  startdate: string
   starttime: string
   title: string
   url?: string
